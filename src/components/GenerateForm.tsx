@@ -9,7 +9,6 @@ import type {
   Resolution,
   DurationSeconds,
   ReferenceImage,
-  VideoReferenceImage,
   GenerateVideoRequest,
   GenerateImageRequest,
   GenerateGeminiImageRequest,
@@ -134,8 +133,6 @@ export function GenerateForm({ onGenerate, onGenerateImage, onGenerateGeminiImag
         aspect_ratio: imageAspectRatio,
         image_size: imageSize,
         mime_type: geminiMimeType,
-        person_generation: personGeneration,
-        temperature,
         location: geminiLocation,
       };
       if (geminiImages.length > 0) {
@@ -157,11 +154,10 @@ export function GenerateForm({ onGenerate, onGenerateImage, onGenerateGeminiImag
             key={m.value}
             type="button"
             onClick={() => setMode(m.value)}
-            className={`flex-1 min-w-[80px] text-sm py-2 px-3 rounded-md transition-colors ${
-              mode === m.value
-                ? 'bg-indigo-500 text-white'
-                : 'text-slate-400 hover:text-slate-200'
-            }`}
+            className={`flex-1 min-w-[80px] text-sm py-2 px-3 rounded-md transition-colors ${mode === m.value
+              ? 'bg-indigo-500 text-white'
+              : 'text-slate-400 hover:text-slate-200'
+              }`}
           >
             {m.label}
           </button>
@@ -223,11 +219,10 @@ export function GenerateForm({ onGenerate, onGenerateImage, onGenerateGeminiImag
                 key={t}
                 type="button"
                 onClick={() => { setRefType(t); setRefImages([]); }}
-                className={`flex-1 text-xs py-1.5 rounded transition-colors ${
-                  refType === t
-                    ? 'bg-indigo-500 text-white'
-                    : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
-                }`}
+                className={`flex-1 text-xs py-1.5 rounded transition-colors ${refType === t
+                  ? 'bg-indigo-500 text-white'
+                  : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
+                  }`}
               >
                 {t === 'asset' ? 'Asset (subject)' : 'Style'}
               </button>
@@ -276,11 +271,10 @@ export function GenerateForm({ onGenerate, onGenerateImage, onGenerateGeminiImag
                     key={ar}
                     type="button"
                     onClick={() => setAspectRatio(ar)}
-                    className={`flex-1 text-xs py-1.5 rounded transition-colors ${
-                      aspectRatio === ar
-                        ? 'bg-indigo-500 text-white'
-                        : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
-                    }`}
+                    className={`flex-1 text-xs py-1.5 rounded transition-colors ${aspectRatio === ar
+                      ? 'bg-indigo-500 text-white'
+                      : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
+                      }`}
                   >
                     {ar}
                   </button>
@@ -297,11 +291,10 @@ export function GenerateForm({ onGenerate, onGenerateImage, onGenerateGeminiImag
                     key={res}
                     type="button"
                     onClick={() => handleResolutionChange(res)}
-                    className={`flex-1 text-xs py-1.5 rounded transition-colors ${
-                      resolution === res
-                        ? 'bg-indigo-500 text-white'
-                        : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
-                    }`}
+                    className={`flex-1 text-xs py-1.5 rounded transition-colors ${resolution === res
+                      ? 'bg-indigo-500 text-white'
+                      : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
+                      }`}
                   >
                     {res}
                   </button>
@@ -319,11 +312,10 @@ export function GenerateForm({ onGenerate, onGenerateImage, onGenerateGeminiImag
                     type="button"
                     onClick={() => handleDurationChange(dur)}
                     disabled={(resolution === '1080p' || resolution === '4k') && dur !== 8}
-                    className={`flex-1 text-xs py-1.5 rounded transition-colors ${
-                      duration === dur
-                        ? 'bg-indigo-500 text-white'
-                        : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
-                    } ${(resolution === '1080p' || resolution === '4k') && dur !== 8 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                    className={`flex-1 text-xs py-1.5 rounded transition-colors ${duration === dur
+                      ? 'bg-indigo-500 text-white'
+                      : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
+                      } ${(resolution === '1080p' || resolution === '4k') && dur !== 8 ? 'opacity-30 cursor-not-allowed' : ''}`}
                   >
                     {dur}s
                   </button>
@@ -356,11 +348,10 @@ export function GenerateForm({ onGenerate, onGenerateImage, onGenerateGeminiImag
                     key={String(val)}
                     type="button"
                     onClick={() => setGenerateAudio(val)}
-                    className={`flex-1 text-xs py-1.5 rounded transition-colors ${
-                      generateAudio === val
-                        ? 'bg-indigo-500 text-white'
-                        : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
-                    }`}
+                    className={`flex-1 text-xs py-1.5 rounded transition-colors ${generateAudio === val
+                      ? 'bg-indigo-500 text-white'
+                      : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
+                      }`}
                   >
                     {val ? 'On' : 'Off'}
                   </button>
@@ -377,11 +368,10 @@ export function GenerateForm({ onGenerate, onGenerateImage, onGenerateGeminiImag
                     key={n}
                     type="button"
                     onClick={() => setSampleCount(n)}
-                    className={`flex-1 text-xs py-1.5 rounded transition-colors ${
-                      sampleCount === n
-                        ? 'bg-indigo-500 text-white'
-                        : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
-                    }`}
+                    className={`flex-1 text-xs py-1.5 rounded transition-colors ${sampleCount === n
+                      ? 'bg-indigo-500 text-white'
+                      : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
+                      }`}
                   >
                     {n}
                   </button>
@@ -399,11 +389,10 @@ export function GenerateForm({ onGenerate, onGenerateImage, onGenerateGeminiImag
                   key={opt}
                   type="button"
                   onClick={() => setPersonGeneration(opt)}
-                  className={`flex-1 text-xs py-1.5 rounded transition-colors ${
-                    personGeneration === opt
-                      ? 'bg-indigo-500 text-white'
-                      : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
-                  }`}
+                  className={`flex-1 text-xs py-1.5 rounded transition-colors ${personGeneration === opt
+                    ? 'bg-indigo-500 text-white'
+                    : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
+                    }`}
                 >
                   {opt.replace('dont_', 'no ').replace('allow_', '')}
                 </button>
@@ -424,11 +413,10 @@ export function GenerateForm({ onGenerate, onGenerateImage, onGenerateGeminiImag
                   key={ar}
                   type="button"
                   onClick={() => setImageAspectRatio(ar)}
-                  className={`flex-1 text-xs py-1.5 rounded transition-colors ${
-                    imageAspectRatio === ar
-                      ? 'bg-indigo-500 text-white'
-                      : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
-                  }`}
+                  className={`flex-1 text-xs py-1.5 rounded transition-colors ${imageAspectRatio === ar
+                    ? 'bg-indigo-500 text-white'
+                    : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
+                    }`}
                 >
                   {ar}
                 </button>
@@ -443,11 +431,10 @@ export function GenerateForm({ onGenerate, onGenerateImage, onGenerateGeminiImag
                   key={size}
                   type="button"
                   onClick={() => setImageSize(size)}
-                  className={`flex-1 text-xs py-1.5 rounded transition-colors ${
-                    imageSize === size
-                      ? 'bg-indigo-500 text-white'
-                      : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
-                  }`}
+                  className={`flex-1 text-xs py-1.5 rounded transition-colors ${imageSize === size
+                    ? 'bg-indigo-500 text-white'
+                    : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
+                    }`}
                 >
                   {size}
                 </button>
@@ -469,11 +456,10 @@ export function GenerateForm({ onGenerate, onGenerateImage, onGenerateGeminiImag
                     key={ar}
                     type="button"
                     onClick={() => setImageAspectRatio(ar)}
-                    className={`flex-1 text-xs py-1.5 rounded transition-colors ${
-                      imageAspectRatio === ar
-                        ? 'bg-indigo-500 text-white'
-                        : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
-                    }`}
+                    className={`flex-1 text-xs py-1.5 rounded transition-colors ${imageAspectRatio === ar
+                      ? 'bg-indigo-500 text-white'
+                      : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
+                      }`}
                   >
                     {ar}
                   </button>
@@ -488,11 +474,10 @@ export function GenerateForm({ onGenerate, onGenerateImage, onGenerateGeminiImag
                     key={size}
                     type="button"
                     onClick={() => setImageSize(size)}
-                    className={`flex-1 text-xs py-1.5 rounded transition-colors ${
-                      imageSize === size
-                        ? 'bg-indigo-500 text-white'
-                        : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
-                    }`}
+                    className={`flex-1 text-xs py-1.5 rounded transition-colors ${imageSize === size
+                      ? 'bg-indigo-500 text-white'
+                      : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
+                      }`}
                   >
                     {size}
                   </button>
@@ -522,11 +507,10 @@ export function GenerateForm({ onGenerate, onGenerateImage, onGenerateGeminiImag
                     key={opt}
                     type="button"
                     onClick={() => setPersonGeneration(opt)}
-                    className={`flex-1 text-xs py-1.5 rounded transition-colors ${
-                      personGeneration === opt
-                        ? 'bg-indigo-500 text-white'
-                        : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
-                    }`}
+                    className={`flex-1 text-xs py-1.5 rounded transition-colors ${personGeneration === opt
+                      ? 'bg-indigo-500 text-white'
+                      : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
+                      }`}
                   >
                     {opt.replace('dont_', 'no ').replace('allow_', '')}
                   </button>
@@ -544,11 +528,10 @@ export function GenerateForm({ onGenerate, onGenerateImage, onGenerateGeminiImag
                     key={mt}
                     type="button"
                     onClick={() => setGeminiMimeType(mt)}
-                    className={`flex-1 text-xs py-1.5 rounded transition-colors ${
-                      geminiMimeType === mt
-                        ? 'bg-indigo-500 text-white'
-                        : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
-                    }`}
+                    className={`flex-1 text-xs py-1.5 rounded transition-colors ${geminiMimeType === mt
+                      ? 'bg-indigo-500 text-white'
+                      : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
+                      }`}
                   >
                     {mt.split('/')[1]}
                   </button>
