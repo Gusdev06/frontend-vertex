@@ -40,7 +40,7 @@ const imageSizes: ImageSize[] = ['512px', '1K', '2K', '4K'];
 const isImageMode = (m: GenerationMode) => m === 'text-to-image' || m === 'edit-image' || m === 'gemini-image';
 const isVideoMode = (m: GenerationMode) => m === 'text-to-video' || m === 'image-to-video';
 
-const geminiModels = ['gemini-3.1-flash-image-preview', 'gemini-2.0-flash-exp'];
+const geminiModels = ['gemini-3.1-flash-image-preview', 'gemini-3-pro-image-preview'];
 const personGenerationOptions = ['allow_adult', 'dont_allow', 'allow_all'];
 const mimeTypes = ['image/png', 'image/jpeg', 'image/webp'];
 const locations = ['us-central1', 'us-east4', 'us-west1', 'europe-west1'];
@@ -80,7 +80,7 @@ export function GenerateForm({ onGenerate, onGenerateImage, onGenerateGeminiImag
   };
 
   const handleDurationChange = (dur: DurationSeconds) => {
-    if (resolution === '1080p' || resolution === '4k') return;
+    if (resolution === '1080p' || resolution === '4K') return;
     setDuration(dur);
   };
 
@@ -105,11 +105,11 @@ export function GenerateForm({ onGenerate, onGenerateImage, onGenerateGeminiImag
       if (mode === 'image-to-video') {
         // image-to-video: first frame + optional last frame (NO reference images)
         if (imageBase64) {
-          req.image_base64 = imageBase64;
-          req.image_mime_type = imageMimeType;
+          req.first_frame = imageBase64;
+          req.first_frame_mime_type = imageMimeType;
         }
         if (lastFrameBase64) {
-          req.last_frame_base64 = lastFrameBase64;
+          req.last_frame = lastFrameBase64;
           req.last_frame_mime_type = lastFrameMimeType;
         }
       } else if (refImages.length > 0) {
@@ -122,10 +122,16 @@ export function GenerateForm({ onGenerate, onGenerateImage, onGenerateGeminiImag
       }
       await onGenerate(req);
     } else if (mode === 'text-to-image') {
-      await onGenerateImage({ prompt, aspectRatio: imageAspectRatio, imageSize });
+      await onGenerateImage({ prompt, aspect_ratio: imageAspectRatio, sample_image_size: imageSize });
     } else if (mode === 'edit-image') {
       if (!editImageBase64) return;
-      await onGenerateImage({ prompt, imageBase64: editImageBase64, imageMimeType: editImageMimeType, aspectRatio: imageAspectRatio, imageSize });
+      // Imagen doesn't support image input — route edit-image through Gemini
+      await onGenerateGeminiImage({
+        prompt,
+        aspect_ratio: imageAspectRatio,
+        image_size: imageSize,
+        images: [{ base64: editImageBase64, mime_type: editImageMimeType }],
+      });
     } else if (mode === 'gemini-image') {
       const req: GenerateGeminiImageRequest = {
         prompt,
@@ -286,7 +292,7 @@ export function GenerateForm({ onGenerate, onGenerateImage, onGenerateGeminiImag
             <div>
               <label className="block text-xs font-medium text-slate-400 mb-1.5">Resolution</label>
               <div className="flex gap-1">
-                {(['720p', '1080p', '4k'] as Resolution[]).map(res => (
+                {(['720p', '1080p', '4K'] as Resolution[]).map(res => (
                   <button
                     key={res}
                     type="button"
@@ -311,11 +317,11 @@ export function GenerateForm({ onGenerate, onGenerateImage, onGenerateGeminiImag
                     key={dur}
                     type="button"
                     onClick={() => handleDurationChange(dur)}
-                    disabled={(resolution === '1080p' || resolution === '4k') && dur !== 8}
+                    disabled={(resolution === '1080p' || resolution === '4K') && dur !== 8}
                     className={`flex-1 text-xs py-1.5 rounded transition-colors ${duration === dur
                       ? 'bg-indigo-500 text-white'
                       : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
-                      } ${(resolution === '1080p' || resolution === '4k') && dur !== 8 ? 'opacity-30 cursor-not-allowed' : ''}`}
+                      } ${(resolution === '1080p' || resolution === '4K') && dur !== 8 ? 'opacity-30 cursor-not-allowed' : ''}`}
                   >
                     {dur}s
                   </button>

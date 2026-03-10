@@ -6,6 +6,7 @@ import type {
   GenerateVideoRequest,
   GenerateImageRequest,
   GenerateGeminiImageRequest,
+  OperationResponse,
 } from '../types';
 
 const STORAGE_KEY = 'gemini-video-jobs';
@@ -101,8 +102,21 @@ export function useVideoGeneration() {
   }, []);
 
   const generateVideo = useCallback(async (req: GenerateVideoRequest) => {
-    const result = await videoService.generate(req);
-    createJob(result.operationName, req.prompt, req.image_base64 ? 'image-to-video' : 'text-to-video');
+    let result: OperationResponse;
+    let mode: VideoJob['mode'];
+
+    if (req.first_frame) {
+      result = await videoService.generateImageToVideo(req);
+      mode = 'image-to-video';
+    } else if (req.reference_images?.length) {
+      result = await videoService.generateWithReferences(req);
+      mode = 'text-to-video';
+    } else {
+      result = await videoService.generateTextToVideo(req);
+      mode = 'text-to-video';
+    }
+
+    createJob(result.operationName, req.prompt, mode);
   }, [createJob]);
 
   const generateGeminiImage = useCallback(async (req: GenerateGeminiImageRequest) => {
