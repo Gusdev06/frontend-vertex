@@ -62,13 +62,13 @@ export function useVideoGeneration() {
         prev.map(j =>
           j.id === activeJobId
             ? {
-                ...j,
-                status: 'completed' as const,
-                videoBase64: firstVideo?.base64,
-                videoMimeType: firstVideo?.mimeType,
-                videoUri: firstVideo?.gcsUri,
-                videos: pollStatus.videos,
-              }
+              ...j,
+              status: 'completed' as const,
+              videoBase64: firstVideo?.base64,
+              videoMimeType: firstVideo?.mimeType,
+              videoUri: firstVideo?.gcsUri,
+              videos: pollStatus.videos,
+            }
             : j,
         ),
       );
@@ -141,11 +141,11 @@ export function useVideoGeneration() {
         prev.map(j =>
           j.id === id
             ? {
-                ...j,
-                status: 'completed' as const,
-                imageData: imagePart.base64,
-                imageMimeType: imagePart.mimeType || 'image/png',
-              }
+              ...j,
+              status: 'completed' as const,
+              imageData: imagePart.base64,
+              imageMimeType: imagePart.mimeType || 'image/png',
+            }
             : j,
         ),
       );
@@ -166,7 +166,7 @@ export function useVideoGeneration() {
     const pendingJob: VideoJob = {
       id,
       prompt: req.prompt,
-      mode: req.imageBase64 ? 'edit-image' : 'text-to-image',
+      mode: 'text-to-image',
       status: 'processing',
       createdAt: Date.now(),
     };
@@ -179,11 +179,11 @@ export function useVideoGeneration() {
         prev.map(j =>
           j.id === id
             ? {
-                ...j,
-                status: 'completed' as const,
-                imageData: result.imageData,
-                imageMimeType: result.mimeType,
-              }
+              ...j,
+              status: 'completed' as const,
+              imageData: result.imageData,
+              imageMimeType: result.mimeType,
+            }
             : j,
         ),
       );

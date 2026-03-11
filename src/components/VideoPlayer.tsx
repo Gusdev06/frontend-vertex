@@ -12,6 +12,9 @@ export function VideoPlayer({ videoBase64, videoMimeType, videoUri, prompt }: Vi
     if (videoBase64) {
       return `data:${videoMimeType || 'video/mp4'};base64,${videoBase64}`;
     }
+    if (videoUri?.startsWith('gs://')) {
+      return `https://storage.googleapis.com/${videoUri.slice(5)}`;
+    }
     return videoUri || '';
   }, [videoBase64, videoMimeType, videoUri]);
 

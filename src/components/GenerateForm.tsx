@@ -41,7 +41,9 @@ const isImageMode = (m: GenerationMode) => m === 'text-to-image' || m === 'edit-
 const isVideoMode = (m: GenerationMode) => m === 'text-to-video' || m === 'image-to-video';
 
 const geminiModels = ['gemini-3.1-flash-image-preview', 'gemini-3-pro-image-preview'];
+const imagenModels = ['nano-banana-2'];
 const personGenerationOptions = ['allow_adult', 'dont_allow', 'allow_all'];
+const safetySettings = ['block_low_and_above', 'block_medium_and_above', 'block_only_high', 'block_none'];
 const mimeTypes = ['image/png', 'image/jpeg', 'image/webp'];
 const locations = ['us-central1', 'us-east4', 'us-west1', 'europe-west1'];
 
@@ -64,9 +66,17 @@ export function GenerateForm({ onGenerate, onGenerateImage, onGenerateGeminiImag
   const [geminiModel, setGeminiModel] = useState('gemini-3.1-flash-image-preview');
   const [geminiMimeType, setGeminiMimeType] = useState('image/png');
   const [personGeneration, setPersonGeneration] = useState('allow_adult');
-  const [temperature, setTemperature] = useState(1);
-  const [geminiLocation, setGeminiLocation] = useState('us-central1');
   const [geminiImages, setGeminiImages] = useState<ReferenceImage[]>([]);
+  const [imagenModel, setImagenModel] = useState('nano-banana-2');
+  const [imagenCount, setImagenCount] = useState(1);
+  const [imagenNegativePrompt, setImagenNegativePrompt] = useState('');
+  const [imagenLanguage, setImagenLanguage] = useState('');
+  const [imagenSafetySetting, setImagenSafetySetting] = useState('block_medium_and_above');
+  const [imagenSeed, setImagenSeed] = useState<number | ''>('');
+  const [imagenEnhancePrompt, setImagenEnhancePrompt] = useState(false);
+  const [imagenAddWatermark, setImagenAddWatermark] = useState(false);
+  const [imagenMimeType, setImagenMimeType] = useState('image/png');
+  const [imagenLocation, setImagenLocation] = useState('us-central1');
   const [lastFrameBase64, setLastFrameBase64] = useState('');
   const [lastFrameMimeType, setLastFrameMimeType] = useState('image/jpeg');
   const [refImages, setRefImages] = useState<ReferenceImage[]>([]);
@@ -74,7 +84,7 @@ export function GenerateForm({ onGenerate, onGenerateImage, onGenerateGeminiImag
 
   const handleResolutionChange = (res: Resolution) => {
     setResolution(res);
-    if (res === '1080p' || res === '4k') {
+    if (res === '1080p' || res === '4K') {
       setDuration(8);
     }
   };
@@ -97,7 +107,6 @@ export function GenerateForm({ onGenerate, onGenerateImage, onGenerateGeminiImag
         duration_seconds: duration,
         generate_audio: generateAudio,
         sample_count: sampleCount,
-        person_generation: personGeneration,
       };
       if (negativePrompt.trim()) {
         req.negative_prompt = negativePrompt;
@@ -122,7 +131,23 @@ export function GenerateForm({ onGenerate, onGenerateImage, onGenerateGeminiImag
       }
       await onGenerate(req);
     } else if (mode === 'text-to-image') {
-      await onGenerateImage({ prompt, aspect_ratio: imageAspectRatio, sample_image_size: imageSize });
+      const imgReq: GenerateImageRequest = {
+        prompt,
+        model: imagenModel,
+        count: imagenCount,
+        aspect_ratio: imageAspectRatio,
+        sample_image_size: imageSize,
+        person_generation: personGeneration,
+        safety_setting: imagenSafetySetting,
+        enhance_prompt: imagenEnhancePrompt || undefined,
+        add_watermark: imagenAddWatermark || undefined,
+        mime_type: imagenMimeType,
+        location: imagenLocation,
+      };
+      if (imagenNegativePrompt.trim()) imgReq.negative_prompt = imagenNegativePrompt;
+      if (imagenLanguage.trim()) imgReq.language = imagenLanguage;
+      if (imagenSeed !== '') imgReq.seed = imagenSeed;
+      await onGenerateImage(imgReq);
     } else if (mode === 'edit-image') {
       if (!editImageBase64) return;
       // Imagen doesn't support image input — route edit-image through Gemini
@@ -139,7 +164,6 @@ export function GenerateForm({ onGenerate, onGenerateImage, onGenerateGeminiImag
         aspect_ratio: imageAspectRatio,
         image_size: imageSize,
         mime_type: geminiMimeType,
-        location: geminiLocation,
       };
       if (geminiImages.length > 0) {
         req.images = geminiImages.map(img => ({
@@ -408,44 +432,214 @@ export function GenerateForm({ onGenerate, onGenerateImage, onGenerateGeminiImag
         </div>
       )}
 
-      {/* Settings Row - Image modes (non-gemini) */}
-      {isImageMode(mode) && mode !== 'gemini-image' && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* Settings - Text-to-Image (Imagen) */}
+      {(mode === 'text-to-image' || mode === 'edit-image') && (
+        <div className="space-y-4">
+          {/* Negative Prompt */}
           <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5">Aspect Ratio</label>
-            <div className="flex gap-1">
-              {imageAspectRatios.map(ar => (
-                <button
-                  key={ar}
-                  type="button"
-                  onClick={() => setImageAspectRatio(ar)}
-                  className={`flex-1 text-xs py-1.5 rounded transition-colors ${imageAspectRatio === ar
-                    ? 'bg-indigo-500 text-white'
-                    : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
-                    }`}
-                >
-                  {ar}
-                </button>
-              ))}
+            <label className="block text-sm font-medium text-slate-300 mb-1.5">Negative Prompt (optional)</label>
+            <input
+              type="text"
+              value={imagenNegativePrompt}
+              onChange={e => setImagenNegativePrompt(e.target.value)}
+              placeholder="Things to avoid: blur, low quality..."
+              className="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-2 text-sm text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500"
+            />
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-xs font-medium text-slate-400 mb-1.5">Aspect Ratio</label>
+              <div className="flex gap-1">
+                {imageAspectRatios.map(ar => (
+                  <button
+                    key={ar}
+                    type="button"
+                    onClick={() => setImageAspectRatio(ar)}
+                    className={`flex-1 text-xs py-1.5 rounded transition-colors ${imageAspectRatio === ar
+                      ? 'bg-indigo-500 text-white'
+                      : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
+                      }`}
+                  >
+                    {ar}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-slate-400 mb-1.5">Image Size</label>
+              <div className="flex gap-1">
+                {imageSizes.map(size => (
+                  <button
+                    key={size}
+                    type="button"
+                    onClick={() => setImageSize(size)}
+                    className={`flex-1 text-xs py-1.5 rounded transition-colors ${imageSize === size
+                      ? 'bg-indigo-500 text-white'
+                      : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
+                      }`}
+                  >
+                    {size}
+                  </button>
+                ))}
+              </div>
             </div>
           </div>
-          <div>
-            <label className="block text-xs font-medium text-slate-400 mb-1.5">Image Size</label>
-            <div className="flex gap-1">
-              {imageSizes.map(size => (
-                <button
-                  key={size}
-                  type="button"
-                  onClick={() => setImageSize(size)}
-                  className={`flex-1 text-xs py-1.5 rounded transition-colors ${imageSize === size
-                    ? 'bg-indigo-500 text-white'
-                    : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
-                    }`}
-                >
-                  {size}
-                </button>
-              ))}
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Model */}
+            <div>
+              <label className="block text-xs font-medium text-slate-400 mb-1.5">Model</label>
+              <select
+                value={imagenModel}
+                onChange={e => setImagenModel(e.target.value)}
+                className="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500"
+              >
+                {imagenModels.map(m => (
+                  <option key={m} value={m}>{m}</option>
+                ))}
+              </select>
             </div>
+
+            {/* Count */}
+            <div>
+              <label className="block text-xs font-medium text-slate-400 mb-1.5">Count</label>
+              <div className="flex gap-1">
+                {[1, 2, 3, 4].map(n => (
+                  <button
+                    key={n}
+                    type="button"
+                    onClick={() => setImagenCount(n)}
+                    className={`flex-1 text-xs py-1.5 rounded transition-colors ${imagenCount === n
+                      ? 'bg-indigo-500 text-white'
+                      : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
+                      }`}
+                  >
+                    {n}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* MIME Type */}
+            <div>
+              <label className="block text-xs font-medium text-slate-400 mb-1.5">MIME Type</label>
+              <div className="flex gap-1">
+                {mimeTypes.map(mt => (
+                  <button
+                    key={mt}
+                    type="button"
+                    onClick={() => setImagenMimeType(mt)}
+                    className={`flex-1 text-xs py-1.5 rounded transition-colors ${imagenMimeType === mt
+                      ? 'bg-indigo-500 text-white'
+                      : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
+                      }`}
+                  >
+                    {mt.split('/')[1]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Person Generation */}
+            <div>
+              <label className="block text-xs font-medium text-slate-400 mb-1.5">Person Generation</label>
+              <div className="flex gap-1">
+                {personGenerationOptions.map(opt => (
+                  <button
+                    key={opt}
+                    type="button"
+                    onClick={() => setPersonGeneration(opt)}
+                    className={`flex-1 text-xs py-1.5 rounded transition-colors ${personGeneration === opt
+                      ? 'bg-indigo-500 text-white'
+                      : 'bg-[#0f172a] text-slate-400 hover:text-slate-200'
+                      }`}
+                  >
+                    {opt.replace('dont_', 'no ').replace('allow_', '')}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Safety Setting */}
+            <div>
+              <label className="block text-xs font-medium text-slate-400 mb-1.5">Safety</label>
+              <select
+                value={imagenSafetySetting}
+                onChange={e => setImagenSafetySetting(e.target.value)}
+                className="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500"
+              >
+                {safetySettings.map(s => (
+                  <option key={s} value={s}>{s.replace(/_/g, ' ')}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Language */}
+            <div>
+              <label className="block text-xs font-medium text-slate-400 mb-1.5">Language (optional)</label>
+              <input
+                type="text"
+                value={imagenLanguage}
+                onChange={e => setImagenLanguage(e.target.value)}
+                placeholder="pt, en, es..."
+                className="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500"
+              />
+            </div>
+
+            {/* Seed */}
+            <div>
+              <label className="block text-xs font-medium text-slate-400 mb-1.5">Seed (optional)</label>
+              <input
+                type="number"
+                value={imagenSeed}
+                onChange={e => setImagenSeed(e.target.value ? Number(e.target.value) : '')}
+                placeholder="Random"
+                className="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500"
+              />
+            </div>
+
+            {/* Location */}
+            <div>
+              <label className="block text-xs font-medium text-slate-400 mb-1.5">Location</label>
+              <select
+                value={imagenLocation}
+                onChange={e => setImagenLocation(e.target.value)}
+                className="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500"
+              >
+                {locations.map(loc => (
+                  <option key={loc} value={loc}>{loc}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div className="flex gap-4">
+            {/* Enhance Prompt */}
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={imagenEnhancePrompt}
+                onChange={e => setImagenEnhancePrompt(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-600 bg-[#0f172a] text-indigo-500 focus:ring-indigo-500/50"
+              />
+              <span className="text-xs text-slate-400">Enhance Prompt</span>
+            </label>
+
+            {/* Add Watermark */}
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="checkbox"
+                checked={imagenAddWatermark}
+                onChange={e => setImagenAddWatermark(e.target.checked)}
+                className="w-4 h-4 rounded border-slate-600 bg-[#0f172a] text-indigo-500 focus:ring-indigo-500/50"
+              />
+              <span className="text-xs text-slate-400">Add Watermark</span>
+            </label>
           </div>
         </div>
       )}
@@ -543,30 +737,6 @@ export function GenerateForm({ onGenerate, onGenerateImage, onGenerateGeminiImag
                   </button>
                 ))}
               </div>
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1.5">Temperature: {temperature}</label>
-              <input
-                type="range"
-                min="0"
-                max="2"
-                step="0.1"
-                value={temperature}
-                onChange={e => setTemperature(Number(e.target.value))}
-                className="w-full accent-indigo-500"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1.5">Location</label>
-              <select
-                value={geminiLocation}
-                onChange={e => setGeminiLocation(e.target.value)}
-                className="w-full bg-[#0f172a] border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 focus:border-indigo-500"
-              >
-                {locations.map(loc => (
-                  <option key={loc} value={loc}>{loc}</option>
-                ))}
-              </select>
             </div>
           </div>
         </div>
